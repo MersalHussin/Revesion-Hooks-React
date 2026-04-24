@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React Concepts Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c28;
+    --border: #2a2a3d;
+    --accent: #7c6af7;
+    --accent2: #f7c26a;
+    --accent3: #6af7c2;
+    --text: #e8e8f0;
+    --muted: #7070a0;
+    --danger: #f76a6a;
+    --sidebar-w: 270px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo h1 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+  .sidebar-logo span { color: var(--accent); }
+  .sidebar-logo p {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .file-tree {
+    padding: 16px 12px;
+    flex: 1;
+  }
+  .file-tree-title {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0 8px;
+    margin-bottom: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+  .tree-folder {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    cursor: default;
+  }
+  .tree-folder .icon { color: var(--accent2); }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px 7px 22px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--muted);
+    transition: all 0.15s;
+    position: relative;
+    margin-bottom: 2px;
+    font-family: 'Space Mono', monospace;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active {
+    color: var(--accent);
+    background: rgba(124,106,247,0.12);
+  }
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 60%;
+    background: var(--accent);
+    border-radius: 0 3px 3px 0;
+  }
+  .nav-item .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent3);
+    flex-shrink: 0;
+  }
+  .nav-item.active .dot { background: var(--accent); }
+
+  /* ── MAIN ── */
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  #breadcrumb {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #breadcrumb span { color: var(--accent); }
+
+  .tab-bar { display: flex; gap: 4px; }
+  .tab-btn {
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); border-color: var(--accent); }
+  .tab-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ── CONTENT ── */
+  #content { flex: 1; padding: 40px 48px; max-width: 860px; }
+
+  .concept-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 32px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .concept-badge {
+    background: rgba(124,106,247,0.15);
+    border: 1px solid rgba(124,106,247,0.3);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    margin-top: 6px;
+  }
+  .concept-header h2 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+  .concept-header p {
+    color: var(--muted);
+    margin-top: 8px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  /* panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* explanation */
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .explain-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    line-height: 1.7;
+    font-size: 0.92rem;
+    color: #c8c8e0;
+  }
+  .explain-card strong { color: var(--accent2); }
+  .explain-card code {
+    font-family: 'Space Mono', monospace;
+    background: var(--surface2);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 0.82em;
+    color: var(--accent3);
+  }
+  .when-use {
+    background: rgba(106,247,194,0.05);
+    border: 1px solid rgba(106,247,194,0.15);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .when-use h4 {
+    color: var(--accent3);
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+  .when-use ul { list-style: none; padding: 0; }
+  .when-use li {
+    color: #a0a0c0;
+    font-size: 0.88rem;
+    padding: 3px 0;
+    display: flex;
+    gap: 8px;
+  }
+  .when-use li::before { content: '→'; color: var(--accent3); flex-shrink: 0; }
+
+  /* code panel */
+  .code-wrapper {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .code-header {
+    background: var(--surface2);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .code-filename {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .code-filename::before {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent2);
+  }
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--accent3); border-color: var(--accent3); }
+  pre { margin: 0 !important; border-radius: 0 !important; }
+  pre code { font-family: 'Space Mono', monospace !important; font-size: 0.82rem !important; }
+  .hljs { background: #0e0e18 !important; padding: 20px !important; }
+
+  /* file structure panel */
+  .file-structure {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 2;
+  }
+  .fs-line { display: flex; align-items: center; gap: 8px; }
+  .fs-folder { color: var(--accent2); }
+  .fs-file { color: var(--accent3); }
+  .fs-active { color: var(--accent); font-weight: 700; }
+  .fs-comment { color: var(--muted); font-size: 0.72rem; }
+
+  /* preview panel */
+  .preview-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .preview-header {
+    background: var(--surface2);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .preview-body {
+    padding: 24px;
+    min-height: 180px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  /* ── INTERACTIVE PREVIEWS ── */
+  .demo { font-family: 'Space Mono', monospace; width: 100%; }
+  .demo-btn {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    transition: opacity 0.15s;
+    margin-right: 8px;
+    margin-bottom: 8px;
+  }
+  .demo-btn:hover { opacity: 0.85; }
+  .demo-btn.secondary {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+  .demo-output {
+    margin-top: 14px;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 0.82rem;
+    color: var(--accent3);
+    min-height: 48px;
+    line-height: 1.6;
+  }
+  .demo-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .demo-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    width: 100%;
+    margin-bottom: 10px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .demo-input:focus { border-color: var(--accent); }
+  .demo-select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    outline: none;
+    margin-right: 8px;
+  }
+  .state-pill {
+    display: inline-block;
+    background: rgba(124,106,247,0.2);
+    border: 1px solid rgba(124,106,247,0.4);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 0.78rem;
+    color: var(--accent);
+    margin: 3px;
+  }
+  .timer-display {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent2);
+    letter-spacing: -1px;
+  }
+  .router-nav {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .router-link {
+    padding: 5px 14px;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-family: 'Space Mono', monospace;
+    transition: all 0.15s;
+  }
+  .router-link:hover { color: var(--text); }
+  .router-link.active-route { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .router-page {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 0.82rem;
+    color: var(--accent3);
+    min-height: 60px;
+  }
+  .context-box {
+    border: 1px dashed rgba(124,106,247,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+  .context-box-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .reducer-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+
+  /* nav arrows */
+  .nav-arrows {
+    display: flex;
+    gap: 8px;
+    padding: 24px 48px;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+  .arrow-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .arrow-btn:hover { color: var(--text); border-color: var(--accent); }
+  .arrow-btn:disabled { opacity: 0.3; cursor: default; }
+  .arrow-btn.next { margin-left: auto; background: var(--accent); border-color: var(--accent); color: #fff; }
+  .arrow-btn.next:hover { opacity: 0.85; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <h1><span>React</span> Concepts<br>Explorer</h1>
+    <p>// learn by doing</p>
+  </div>
+  <nav class="file-tree">
+    <div class="file-tree-title">src / concepts</div>
+    <div class="tree-folder"><span class="icon">📁</span> components</div>
+    <div class="nav-item active" onclick="navigate(0)" id="nav-0"><span class="dot"></span>Props.jsx</div>
+    <div class="nav-item" onclick="navigate(1)" id="nav-1"><span class="dot"></span>useState.jsx</div>
+    <div class="nav-item" onclick="navigate(2)" id="nav-2"><span class="dot"></span>useEffect.jsx</div>
+    <div class="nav-item" onclick="navigate(3)" id="nav-3"><span class="dot"></span>useRef.jsx</div>
+    <div class="nav-item" onclick="navigate(4)" id="nav-4"><span class="dot"></span>useContext.jsx</div>
+    <div class="nav-item" onclick="navigate(5)" id="nav-5"><span class="dot"></span>useReducer.jsx</div>
+    <div class="tree-folder" style="margin-top:8px"><span class="icon">📁</span> router</div>
+    <div class="nav-item" onclick="navigate(6)" id="nav-6"><span class="dot"></span>RouterDemo.jsx</div>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div id="main">
+  <!-- TOPBAR -->
+  <header id="topbar">
+    <div id="breadcrumb">src / concepts / <span id="bc-file">Props.jsx</span></div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('explain')">📖 Explain</button>
+      <button class="tab-btn" onclick="switchTab('code')">💻 Code</button>
+      <button class="tab-btn" onclick="switchTab('structure')">🗂 Structure</button>
+      <button class="tab-btn" onclick="switchTab('preview')">▶ Preview</button>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div id="content"></div>
+
+  <!-- NAV ARROWS -->
+  <div class="nav-arrows">
+    <button class="arrow-btn" id="btn-prev" onclick="navigate(currentIndex-1)">← Prev</button>
+    <button class="arrow-btn next" id="btn-next" onclick="navigate(currentIndex+1)">Next →</button>
+  </div>
+</div>
+
+<script>
+const concepts = [
+  /* ─── 0: PROPS ─── */
+  {
+    file: 'Props.jsx',
+    title: 'Props',
+    badge: 'Core Concept',
+    subtitle: 'Pass data from parent to child components — the primary communication channel in React.',
+    explain: `
+      <div class="explain-card">
+        <strong>Props (Properties)</strong> are how you pass data <em>into</em> a component from its parent. Think of a component as a function — props are its <code>parameters</code>.<br><br>
+        Props are <strong>read-only</strong>: a child component can never modify the props it receives. Data flows in one direction — parent → child. This is called <strong>unidirectional data flow</strong>.
+      </div>
+      <div class="when-use">
+        <h4>// When to use Props</h4>
+        <ul>
+          <li>Displaying dynamic data inside a reusable component</li>
+          <li>Passing callback functions to handle child events</li>
+          <li>Configuring component behavior from the outside</li>
+          <li>Building component APIs (button size, color, variant…)</li>
+        </ul>
+      </div>
+    `,
+    code: `// UserCard.jsx — Child Component
+function UserCard({ name, role, avatar, onClick }) {
+  return (
+    &lt;div className="card" onClick={onClick}&gt;
+      &lt;img src={avatar} alt={name} /&gt;
+      &lt;h3&gt;{name}&lt;/h3&gt;
+      &lt;p&gt;{role}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+
+// App.jsx — Parent Component
+function App() {
+  const handleClick = (name) =&gt; {
+    alert(\`You clicked \${name}!\`);
+  };
+
+  return (
+    &lt;div&gt;
+      &lt;UserCard
+        name="Sara Ahmed"
+        role="Frontend Dev"
+        avatar="/img/sara.jpg"
+        onClick={() =&gt; handleClick("Sara")}
+      /&gt;
+      &lt;UserCard
+        name="Khalid Omar"
+        role="UI Designer"
+        avatar="/img/khalid.jpg"
+        onClick={() =&gt; handleClick("Khalid")}
+      /&gt;
+    &lt;/div&gt;
+  );
+}`,
+    structure: `
+      <div class="file-structure">
+        <div class="fs-line"><span style="color:var(--muted)">src/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">├── components/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   ├── </span><span class="fs-active">UserCard.jsx</span><span class="fs-comment"> &nbsp;← child, receives props</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   └── UserList.jsx</span><span class="fs-comment"> &nbsp;← renders many UserCards</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">└── </span><span class="fs-file">App.jsx</span><span class="fs-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← parent, passes props</span></div>
+      </div>
+      <p style="color:var(--muted);font-size:0.82rem;margin-top:16px;font-family:'Space Mono',monospace;">Props flow downward only: App → UserList → UserCard</p>
+    `,
+    preview: () => {
+      const users = [
+        { name: 'Sara Ahmed', role: 'Frontend Dev', color: '#7c6af7' },
+        { name: 'Khalid Omar', role: 'UI Designer', color: '#f7c26a' },
+        { name: 'Layla Hassan', role: 'Backend Dev', color: '#6af7c2' },
+      ];
+      let out = `<div class="demo">
+        <div class="demo-label">Props passed to &lt;UserCard /&gt;</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">`;
+      users.forEach(u => {
+        out += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:transform 0.15s;" onmouseenter="this.style.transform='translateY(-3px)'" onmouseleave="this.style.transform=''" onclick="document.getElementById('props-out').textContent='Clicked: ${u.name} — ${u.role}'">
+          <div style="width:44px;height:44px;border-radius:50%;background:${u.color}33;border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.2rem;">${u.name[0]}</div>
+          <div style="font-size:0.82rem;font-weight:700;">${u.name}</div>
+          <div style="font-size:0.72rem;color:var(--muted);">${u.role}</div>
+        </div>`;
+      });
+      out += `</div><div class="demo-output" id="props-out">Click a card to fire the onClick prop →</div></div>`;
+      return out;
+    }
+  },
+
+  /* ─── 1: useState ─── */
+  {
+    file: 'useState.jsx',
+    title: 'useState',
+    badge: 'Hook',
+    subtitle: 'Add reactive local state to functional components — when state changes, the component re-renders.',
+    explain: `
+      <div class="explain-card">
+        <strong>useState</strong> is a Hook that lets you add <strong>state variables</strong> to a functional component.<br><br>
+        Syntax: <code>const [value, setValue] = useState(initialValue)</code><br><br>
+        Every time you call <code>setValue()</code>, React <strong>re-renders</strong> the component with the new value. The state persists between renders — unlike a plain variable which resets on every render.
+      </div>
+      <div class="when-use">
+        <h4>// When to use useState</h4>
+        <ul>
+          <li>Toggling UI elements (modal open/closed, dark mode)</li>
+          <li>Tracking form input values</li>
+          <li>Counting clicks, likes, items in cart</li>
+          <li>Storing API response data locally</li>
+        </ul>
+      </div>
+    `,
+    code: `import { useState } from 'react';
+
+function Counter() {
+  // Declare state: count starts at 0
+  const [count, setCount] = useState(0);
+  const [theme, setTheme] = useState('light');
+
+  return (
+    &lt;div className={theme}&gt;
+      &lt;h2&gt;Count: {count}&lt;/h2&gt;
+
+      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;+&lt;/button&gt;
+      &lt;button onClick={() =&gt; setCount(count - 1)}&gt;-&lt;/button&gt;
+      &lt;button onClick={() =&gt; setCount(0)}&gt;Reset&lt;/button&gt;
+
+      &lt;button onClick={() =&gt;
+        setTheme(theme === 'light' ? 'dark' : 'light')
+      }&gt;
+        Toggle Theme
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}`,
+    structure: `
+      <div class="file-structure">
+        <div class="fs-line"><span style="color:var(--muted)">src/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">├── components/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   ├── </span><span class="fs-active">Counter.jsx</span><span class="fs-comment"> &nbsp;← useState lives here</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   ├── Toggle.jsx</span><span class="fs-comment"> &nbsp;&nbsp;← boolean state</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   └── Form.jsx</span><span class="fs-comment"> &nbsp;&nbsp;&nbsp;&nbsp;← controlled inputs</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">└── </span><span class="fs-file">App.jsx</span></div>
+      </div>
+      <p style="color:var(--muted);font-size:0.82rem;margin-top:16px;font-family:'Space Mono',monospace;">State is local — each component has its own copy</p>
+    `,
+    preview: () => `
+      <div class="demo" id="usestate-demo">
+        <div class="demo-label">Live useState demo</div>
+        <div style="margin-bottom:12px">
+          <span style="font-size:2.5rem;font-weight:800;color:var(--accent);font-family:'Space Mono',monospace;" id="cnt">0</span>
+          <span style="color:var(--muted);font-size:0.78rem;margin-left:10px;">count</span>
+        </div>
+        <button class="demo-btn" onclick="usDs(1)">+1</button>
+        <button class="demo-btn secondary" onclick="usDs(-1)">−1</button>
+        <button class="demo-btn secondary" onclick="usDs('r')">Reset</button>
+        <div style="margin-top:16px;">
+          <div class="demo-label">Form state — type something</div>
+          <input class="demo-input" placeholder="Type your name..." oninput="document.getElementById('name-out').textContent = 'State value: ' + this.value" />
+          <div class="demo-output" id="name-out">State value: </div>
+        </div>
+      </div>
+    `
+  },
+
+  /* ─── 2: useEffect ─── */
+  {
+    file: 'useEffect.jsx',
+    title: 'useEffect',
+    badge: 'Hook',
+    subtitle: 'Run side effects after render — API calls, subscriptions, timers, and DOM manipulation.',
+    explain: `
+      <div class="explain-card">
+        <strong>useEffect</strong> lets you perform <em>side effects</em> — actions that happen outside React's render cycle.<br><br>
+        It runs <strong>after</strong> the component renders. The <strong>dependency array</strong> controls when it re-runs:<br>
+        • <code>useEffect(fn)</code> → runs after every render<br>
+        • <code>useEffect(fn, [])</code> → runs once on mount<br>
+        • <code>useEffect(fn, [dep])</code> → runs when <code>dep</code> changes<br><br>
+        Return a <strong>cleanup function</strong> to clear timers, subscriptions, or event listeners.
+      </div>
+      <div class="when-use">
+        <h4>// When to use useEffect</h4>
+        <ul>
+          <li>Fetching data from an API on mount</li>
+          <li>Setting up WebSocket or event listeners</li>
+          <li>Syncing state with localStorage</li>
+          <li>Starting/clearing intervals and timers</li>
+        </ul>
+      </div>
+    `,
+    code: `import { useState, useEffect } from 'react';
+
+function Timer() {
+  const [seconds, setSeconds] = useState(0);
+  const [running, setRunning] = useState(false);
+
+  useEffect(() =&gt; {
+    if (!running) return; // skip if paused
+
+    const interval = setInterval(() =&gt; {
+      setSeconds(s =&gt; s + 1);
+    }, 1000);
+
+    // Cleanup: clear interval when component
+    // unmounts or 'running' changes
+    return () =&gt; clearInterval(interval);
+  }, [running]); // re-run when 'running' changes
+
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;{seconds}s&lt;/h2&gt;
+      &lt;button onClick={() =&gt; setRunning(!running)}&gt;
+        {running ? 'Pause' : 'Start'}
+      &lt;/button&gt;
+      &lt;button onClick={() =&gt; {
+        setRunning(false);
+        setSeconds(0);
+      }}&gt;Reset&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}`,
+    structure: `
+      <div class="file-structure">
+        <div class="fs-line"><span style="color:var(--muted)">src/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">├── components/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   ├── </span><span class="fs-active">Timer.jsx</span><span class="fs-comment"> &nbsp;&nbsp;&nbsp;&nbsp;← interval effect</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   └── UserList.jsx</span><span class="fs-comment"> &nbsp;← fetch on mount</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">├── hooks/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   └── useFetch.js</span><span class="fs-comment"> &nbsp;&nbsp;← custom hook wrapping useEffect</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">└── </span><span class="fs-file">App.jsx</span></div>
+      </div>
+    `,
+    preview: () => `
+      <div class="demo">
+        <div class="demo-label">useEffect — Stopwatch (interval + cleanup)</div>
+        <div class="timer-display" id="eff-timer">00:00</div>
+        <div style="margin-top:12px;">
+          <button class="demo-btn" id="eff-btn" onclick="effToggle()">▶ Start</button>
+          <button class="demo-btn secondary" onclick="effReset()">Reset</button>
+        </div>
+        <div class="demo-output" id="eff-log">Effect status: not mounted</div>
+      </div>
+    `
+  },
+
+  /* ─── 3: useRef ─── */
+  {
+    file: 'useRef.jsx',
+    title: 'useRef',
+    badge: 'Hook',
+    subtitle: 'Access DOM elements directly or store mutable values that do NOT trigger re-renders.',
+    explain: `
+      <div class="explain-card">
+        <strong>useRef</strong> returns a mutable object: <code>{ current: value }</code>.<br><br>
+        It has two main use cases:<br>
+        1. <strong>DOM access</strong> — attach to a JSX element via <code>ref={myRef}</code> to get direct access to the DOM node (focus, scroll, measure…)<br>
+        2. <strong>Mutable value without re-render</strong> — store a value that persists across renders, but changing it does <em>not</em> cause a re-render (perfect for timers, previous values, flags).
+      </div>
+      <div class="when-use">
+        <h4>// When to use useRef</h4>
+        <ul>
+          <li>Auto-focusing an input on mount</li>
+          <li>Storing interval or timeout IDs</li>
+          <li>Tracking the previous value of a state</li>
+          <li>Measuring element dimensions (getBoundingClientRect)</li>
+        </ul>
+      </div>
+    `,
+    code: `import { useRef, useState } from 'react';
+
+function SearchBox() {
+  const inputRef = useRef(null);
+  const renderCount = useRef(0);
+  const [query, setQuery] = useState('');
+
+  // renderCount doesn't cause re-renders
+  renderCount.current += 1;
+
+  const focusInput = () =&gt; {
+    inputRef.current.focus();
+    inputRef.current.select();
+  };
+
+  const clearInput = () =&gt; {
+    setQuery('');
+    inputRef.current.focus(); // focus after clear
+  };
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;Render count: {renderCount.current}&lt;/p&gt;
+      &lt;input
+        ref={inputRef}          // attach ref to DOM
+        value={query}
+        onChange={e =&gt; setQuery(e.target.value)}
+        placeholder="Search..."
+      /&gt;
+      &lt;button onClick={focusInput}&gt;Focus&lt;/button&gt;
+      &lt;button onClick={clearInput}&gt;Clear&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}`,
+    structure: `
+      <div class="file-structure">
+        <div class="fs-line"><span style="color:var(--muted)">src/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">├── components/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   ├── </span><span class="fs-active">SearchBox.jsx</span><span class="fs-comment"> &nbsp;← DOM ref + mutable ref</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   └── VideoPlayer.jsx</span><span class="fs-comment">← ref.current.play()</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">└── </span><span class="fs-file">App.jsx</span></div>
+      </div>
+      <p style="color:var(--muted);font-size:0.82rem;margin-top:16px;font-family:'Space Mono',monospace;">ref.current changes silently — no re-render triggered</p>
+    `,
+    preview: () => `
+      <div class="demo">
+        <div class="demo-label">useRef — DOM control demo</div>
+        <input class="demo-input" id="ref-input" placeholder="I'm a referenced input..." />
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="demo-btn" onclick="document.getElementById('ref-input').focus();refLog('Called inputRef.current.focus()')">Focus Input</button>
+          <button class="demo-btn secondary" onclick="document.getElementById('ref-input').value='';refLog('Called inputRef.current — value cleared')">Clear</button>
+          <button class="demo-btn secondary" onclick="refCount();refLog('renderCount.current = ' + window._refCount + ' (no re-render!)')">Increment Ref Count</button>
+        </div>
+        <div class="demo-output" id="ref-log">Click a button to call ref methods →</div>
+      </div>
+    `
+  },
+
+  /* ─── 4: useContext ─── */
+  {
+    file: 'useContext.jsx',
+    title: 'useContext',
+    badge: 'Hook',
+    subtitle: 'Share data across the component tree without passing props through every level (prop drilling).',
+    explain: `
+      <div class="explain-card">
+        <strong>useContext</strong> solves the <em>prop drilling</em> problem. Instead of passing a value through many intermediate components, you put it in a <strong>Context</strong> and any child anywhere in the tree can read it directly.<br><br>
+        Three steps:<br>
+        1. <code>createContext()</code> — create the context<br>
+        2. <code>&lt;Context.Provider value={...}&gt;</code> — wrap the tree<br>
+        3. <code>useContext(MyContext)</code> — consume it in any child
+      </div>
+      <div class="when-use">
+        <h4>// When to use useContext</h4>
+        <ul>
+          <li>Theme / dark mode across entire app</li>
+          <li>Authentication state (current user)</li>
+          <li>Language / locale preferences</li>
+          <li>Shared settings without a state library</li>
+        </ul>
+      </div>
+    `,
+    code: `import { createContext, useContext, useState } from 'react';
+
+// 1. Create the context
+const ThemeContext = createContext('light');
+
+// 2. Provider wraps the app
+function App() {
+  const [theme, setTheme] = useState('light');
+
+  return (
+    &lt;ThemeContext.Provider value={{ theme, setTheme }}&gt;
+      &lt;Layout /&gt;
+    &lt;/ThemeContext.Provider&gt;
+  );
+}
+
+// 3. Any descendant can consume it
+function ThemeToggle() {
+  const { theme, setTheme } = useContext(ThemeContext);
+
+  return (
+    &lt;button onClick={() =&gt;
+      setTheme(theme === 'light' ? 'dark' : 'light')
+    }&gt;
+      Current: {theme} — Click to toggle
+    &lt;/button&gt;
+  );
+}
+
+// No props passed through Layout!
+function Layout() {
+  return &lt;main&gt;&lt;ThemeToggle /&gt;&lt;/main&gt;;
+}`,
+    structure: `
+      <div class="file-structure">
+        <div class="fs-line"><span style="color:var(--muted)">src/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">├── context/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   ├── </span><span class="fs-active">ThemeContext.js</span><span class="fs-comment"> ← createContext</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   └── AuthContext.js</span><span class="fs-comment"> &nbsp;← user context</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">├── components/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   └── ThemeToggle.jsx</span><span class="fs-comment">← useContext consumer</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">└── </span><span class="fs-file">App.jsx</span><span class="fs-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Provider lives here</span></div>
+      </div>
+    `,
+    preview: () => `
+      <div class="demo" id="ctx-demo">
+        <div class="demo-label">Context tree — theme shared without prop drilling</div>
+        <div class="context-box">
+          <div class="context-box-label">ThemeContext.Provider (App)</div>
+          <div class="context-box" style="border-color:rgba(247,194,106,0.3)">
+            <div class="context-box-label" style="color:var(--accent2)">Layout (no theme prop!)</div>
+            <div class="context-box" style="border-color:rgba(106,247,194,0.3)">
+              <div class="context-box-label" style="color:var(--accent3)">ThemeToggle — useContext(ThemeContext)</div>
+              <button class="demo-btn" id="ctx-btn" onclick="ctxToggle()">🌙 Switch to Dark</button>
+            </div>
+          </div>
+        </div>
+        <div class="demo-output" id="ctx-out">theme = "light" — consumed from context, no props passed!</div>
+      </div>
+    `
+  },
+
+  /* ─── 5: useReducer ─── */
+  {
+    file: 'useReducer.jsx',
+    title: 'useReducer',
+    badge: 'Hook',
+    subtitle: 'Manage complex state logic with a reducer function — the React take on the Redux pattern.',
+    explain: `
+      <div class="explain-card">
+        <strong>useReducer</strong> is an alternative to <code>useState</code> for managing <em>complex state logic</em>.<br><br>
+        Syntax: <code>const [state, dispatch] = useReducer(reducer, initialState)</code><br><br>
+        You dispatch <strong>actions</strong> (objects with a <code>type</code>) and the <strong>reducer function</strong> decides how state changes. The reducer is a pure function: <code>(state, action) → newState</code>.
+      </div>
+      <div class="when-use">
+        <h4>// When to use useReducer over useState</h4>
+        <ul>
+          <li>State has multiple sub-values (object with many fields)</li>
+          <li>Next state depends on the previous state</li>
+          <li>Complex update logic (multiple cases)</li>
+          <li>You want predictable, testable state transitions</li>
+        </ul>
+      </div>
+    `,
+    code: `import { useReducer } from 'react';
+
+const initialState = { count: 0, history: [] };
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'INCREMENT':
+      return {
+        count: state.count + 1,
+        history: [...state.history, '+1']
+      };
+    case 'DECREMENT':
+      return {
+        count: state.count - 1,
+        history: [...state.history, '-1']
+      };
+    case 'RESET':
+      return initialState;
+    case 'ADD':
+      return {
+        count: state.count + action.payload,
+        history: [...state.history, \`+\${action.payload}\`]
+      };
+    default:
+      return state;
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;{state.count}&lt;/h2&gt;
+      &lt;button onClick={() =&gt; dispatch({ type: 'INCREMENT' })}&gt;+&lt;/button&gt;
+      &lt;button onClick={() =&gt; dispatch({ type: 'DECREMENT' })}&gt;-&lt;/button&gt;
+      &lt;button onClick={() =&gt; dispatch({ type: 'ADD', payload: 10 })}&gt;+10&lt;/button&gt;
+      &lt;button onClick={() =&gt; dispatch({ type: 'RESET' })}&gt;Reset&lt;/button&gt;
+      &lt;p&gt;History: {state.history.join(', ')}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}`,
+    structure: `
+      <div class="file-structure">
+        <div class="fs-line"><span style="color:var(--muted)">src/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">├── reducers/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   └── </span><span class="fs-active">counterReducer.js</span><span class="fs-comment"> ← pure reducer fn</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">├── components/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   └── Counter.jsx</span><span class="fs-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← dispatch actions</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">└── </span><span class="fs-file">App.jsx</span></div>
+      </div>
+      <p style="color:var(--muted);font-size:0.82rem;margin-top:16px;font-family:'Space Mono',monospace;">dispatch(action) → reducer(state, action) → newState</p>
+    `,
+    preview: () => `
+      <div class="demo">
+        <div class="demo-label">useReducer — dispatch actions to change state</div>
+        <div style="font-size:2.5rem;font-weight:800;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:12px" id="red-count">0</div>
+        <div class="reducer-actions">
+          <button class="demo-btn" onclick="redDispatch('INCREMENT')">dispatch INCREMENT</button>
+          <button class="demo-btn secondary" onclick="redDispatch('DECREMENT')">dispatch DECREMENT</button>
+          <button class="demo-btn secondary" onclick="redDispatch('ADD10')">dispatch ADD +10</button>
+          <button class="demo-btn secondary" onclick="redDispatch('RESET')">dispatch RESET</button>
+        </div>
+        <div class="demo-label">Action history</div>
+        <div class="demo-output" style="font-size:0.75rem;word-break:break-all" id="red-hist">No actions dispatched yet</div>
+      </div>
+    `
+  },
+
+  /* ─── 6: React Router DOM ─── */
+  {
+    file: 'RouterDemo.jsx',
+    title: 'React Router DOM',
+    badge: 'Library',
+    subtitle: 'Add client-side navigation to your React app — multiple pages without full page reloads.',
+    explain: `
+      <div class="explain-card">
+        <strong>React Router DOM</strong> is the standard routing library for React SPAs. It syncs the UI with the browser URL without reloading the page.<br><br>
+        Key components:<br>
+        • <code>&lt;BrowserRouter&gt;</code> — wraps the app, provides routing context<br>
+        • <code>&lt;Routes&gt; / &lt;Route&gt;</code> — defines which component renders at which URL<br>
+        • <code>&lt;Link&gt;</code> — navigation without page reload<br>
+        • <code>useNavigate()</code> — programmatic navigation<br>
+        • <code>useParams()</code> — read URL parameters like <code>/user/:id</code>
+      </div>
+      <div class="when-use">
+        <h4>// When to use React Router</h4>
+        <ul>
+          <li>Multi-page SPA (Home, About, Dashboard, Profile…)</li>
+          <li>URL-based navigation with browser back/forward</li>
+          <li>Dynamic routes with parameters (/post/:id)</li>
+          <li>Protected / authenticated routes</li>
+        </ul>
+      </div>
+    `,
+    code: `import {
+  BrowserRouter,
+  Routes, Route,
+  Link, useNavigate, useParams
+} from 'react-router-dom';
+
+// Pages
+const Home    = () =&gt; &lt;h1&gt;🏠 Home&lt;/h1&gt;;
+const About   = () =&gt; &lt;h1&gt;ℹ️ About&lt;/h1&gt;;
+const Contact = () =&gt; &lt;h1&gt;📬 Contact&lt;/h1&gt;;
+
+// Dynamic route: /user/:id
+function UserProfile() {
+  const { id } = useParams();
+  return &lt;h1&gt;👤 User #{id}&lt;/h1&gt;;
+}
+
+// Navbar with Link
+function Navbar() {
+  const navigate = useNavigate();
+  return (
+    &lt;nav&gt;
+      &lt;Link to="/"&gt;Home&lt;/Link&gt;
+      &lt;Link to="/about"&gt;About&lt;/Link&gt;
+      &lt;Link to="/contact"&gt;Contact&lt;/Link&gt;
+      &lt;button onClick={() =&gt; navigate('/user/42')}&gt;
+        Go to User 42
+      &lt;/button&gt;
+    &lt;/nav&gt;
+  );
+}
+
+// App with Router setup
+function App() {
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;Navbar /&gt;
+      &lt;Routes&gt;
+        &lt;Route path="/"        element={&lt;Home /&gt;}    /&gt;
+        &lt;Route path="/about"   element={&lt;About /&gt;}   /&gt;
+        &lt;Route path="/contact" element={&lt;Contact /&gt;} /&gt;
+        &lt;Route path="/user/:id" element={&lt;UserProfile /&gt;} /&gt;
+        &lt;Route path="*"        element={&lt;h1&gt;404&lt;/h1&gt;} /&gt;
+      &lt;/Routes&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}`,
+    structure: `
+      <div class="file-structure">
+        <div class="fs-line"><span style="color:var(--muted)">src/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">├── pages/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   ├── Home.jsx</span><span class="fs-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← route "/"</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   ├── About.jsx</span><span class="fs-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← route "/about"</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   └── UserProfile.jsx</span><span class="fs-comment">← route "/user/:id"</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">├── components/</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">│   └── </span><span class="fs-active">Navbar.jsx</span><span class="fs-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← &lt;Link&gt; navigation</span></div>
+        <div class="fs-line"><span style="color:var(--muted)">└── </span><span class="fs-file">App.jsx</span><span class="fs-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← BrowserRouter + Routes</span></div>
+      </div>
+    `,
+    preview: () => `
+      <div class="demo">
+        <div class="demo-label">Simulated router — click links to navigate</div>
+        <div class="router-nav">
+          <div class="router-link active-route" onclick="routeTo('home',this)">&lt;Link to="/"&gt; Home</div>
+          <div class="router-link" onclick="routeTo('about',this)">&lt;Link to="/about"&gt; About</div>
+          <div class="router-link" onclick="routeTo('contact',this)">&lt;Link to="/contact"&gt; Contact</div>
+          <div class="router-link" onclick="routeTo('user42',this)">useNavigate → /user/42</div>
+        </div>
+        <div class="router-page" id="router-page">
+          🏠 &lt;Home /&gt; — rendered at route "/"
+        </div>
+        <div class="demo-output" id="router-url" style="margin-top:10px;color:var(--muted)">URL: /</div>
+      </div>
+    `
+  }
+];
+
+const pages = {
+  home:    { content: '🏠 &lt;Home /&gt; — rendered at route "/"', url: '/' },
+  about:   { content: 'ℹ️ &lt;About /&gt; — rendered at route "/about"', url: '/about' },
+  contact: { content: '📬 &lt;Contact /&gt; — rendered at route "/contact"', url: '/contact' },
+  user42:  { content: '👤 &lt;UserProfile id="42" /&gt; — useParams() extracted id = 42', url: '/user/42' }
+};
+
+let currentIndex = 0;
+let currentTab = 'explain';
+
+// useReducer demo state
+let redState = { count: 0, history: [] };
+// useEffect demo
+let effInterval = null;
+let effSeconds = 0;
+let effRunning = false;
+// useRef demo
+window._refCount = 0;
+
+function navigate(idx) {
+  if (idx < 0 || idx >= concepts.length) return;
+  currentIndex = idx;
+  currentTab = 'explain';
+  render();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  render();
+}
+
+function render() {
+  const c = concepts[currentIndex];
+
+  // Sidebar
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
+    el.classList.toggle('active', i === currentIndex);
+  });
+
+  // Breadcrumb
+  document.getElementById('bc-file').textContent = c.file;
+
+  // Tab buttons
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(currentTab) ||
+      (currentTab === 'explain' && btn.textContent.includes('Explain')) ||
+      (currentTab === 'code' && btn.textContent.includes('Code')) ||
+      (currentTab === 'structure' && btn.textContent.includes('Structure')) ||
+      (currentTab === 'preview' && btn.textContent.includes('Preview'))
+    );
+  });
+
+  // Nav arrows
+  document.getElementById('btn-prev').disabled = currentIndex === 0;
+  document.getElementById('btn-next').disabled = currentIndex === concepts.length - 1;
+
+  // Content
+  let html = `
+    <div class="concept-header">
+      <div>
+        <div class="concept-badge">${c.badge}</div>
+      </div>
+      <div>
+        <h2>${c.title}</h2>
+        <p>${c.subtitle}</p>
+      </div>
+    </div>
+  `;
+
+  if (currentTab === 'explain') {
+    html += `<div class="section-label">// Explanation</div>${c.explain}`;
+  } else if (currentTab === 'code') {
+    html += `
+      <div class="section-label">// Example Code</div>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <div class="code-filename">${c.file}</div>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code class="language-jsx">${c.code}</code></pre>
+      </div>
+    `;
+  } else if (currentTab === 'structure') {
+    html += `<div class="section-label">// File Structure</div>${c.structure}`;
+  } else if (currentTab === 'preview') {
+    html += `
+      <div class="section-label">// Live Preview</div>
+      <div class="preview-box">
+        <div class="preview-header">
+          <div class="preview-dot" style="background:#f76a6a"></div>
+          <div class="preview-dot" style="background:#f7c26a"></div>
+          <div class="preview-dot" style="background:#6af7c2"></div>
+          <span style="font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);margin-left:8px">${c.file}</span>
+        </div>
+        <div class="preview-body">
+          ${typeof c.preview === 'function' ? c.preview() : c.preview}
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('content').innerHTML = html;
+
+  // Highlight code
+  if (currentTab === 'code') {
+    document.querySelectorAll('pre code').forEach(el => {
+      hljs.highlightElement(el);
+    });
+  }
+
+  // Re-init effect demo
+  if (currentTab === 'preview' && currentIndex === 2) {
+    effSeconds = 0; effRunning = false;
+    if (effInterval) clearInterval(effInterval);
+    document.getElementById('eff-log').textContent = 'Effect status: idle — click Start to mount interval';
+  }
+  if (currentTab === 'preview' && currentIndex === 3) {
+    window._refCount = 0;
+  }
+  if (currentTab === 'preview' && currentIndex === 4) {
+    window._ctxTheme = 'light';
+  }
+  if (currentTab === 'preview' && currentIndex === 5) {
+    redState = { count: 0, history: [] };
+  }
+}
+
+// ── PREVIEW INTERACTIONS ──
+
+// useState
+function usDs(action) {
+  const el = document.getElementById('cnt');
+  if (!el) return;
+  let v = parseInt(el.textContent);
+  if (action === 1) v++;
+  else if (action === -1) v--;
+  else v = 0;
+  el.textContent = v;
+}
+
+// useEffect timer
+function effToggle() {
+  effRunning = !effRunning;
+  const btn = document.getElementById('eff-btn');
+  const log = document.getElementById('eff-log');
+  if (effRunning) {
+    btn.textContent = '⏸ Pause';
+    log.textContent = 'Effect: setInterval started — cleanup fn ready';
+    effInterval = setInterval(() => {
+      effSeconds++;
+      const m = String(Math.floor(effSeconds/60)).padStart(2,'0');
+      const s = String(effSeconds%60).padStart(2,'0');
+      const t = document.getElementById('eff-timer');
+      if (t) t.textContent = m+':'+s;
+    }, 1000);
+  } else {
+    btn.textContent = '▶ Start';
+    log.textContent = 'Effect: clearInterval called — cleanup ran!';
+    clearInterval(effInterval);
+  }
+}
+function effReset() {
+  clearInterval(effInterval);
+  effRunning = false; effSeconds = 0;
+  const t = document.getElementById('eff-timer');
+  const b = document.getElementById('eff-btn');
+  const l = document.getElementById('eff-log');
+  if (t) t.textContent = '00:00';
+  if (b) b.textContent = '▶ Start';
+  if (l) l.textContent = 'Effect: reset — interval cleared';
+}
+
+// useRef
+function refLog(msg) {
+  const el = document.getElementById('ref-log');
+  if (el) el.textContent = msg;
+}
+function refCount() {
+  window._refCount++;
+}
+
+// useContext
+window._ctxTheme = 'light';
+function ctxToggle() {
+  window._ctxTheme = window._ctxTheme === 'light' ? 'dark' : 'light';
+  const btn = document.getElementById('ctx-btn');
+  const out = document.getElementById('ctx-out');
+  if (btn) btn.textContent = window._ctxTheme === 'dark' ? '☀️ Switch to Light' : '🌙 Switch to Dark';
+  if (out) out.textContent = `theme = "${window._ctxTheme}" — consumed from context, no props passed!`;
+}
+
+// useReducer
+function redDispatch(type) {
+  if (type === 'INCREMENT') { redState.count++; redState.history.push('+1'); }
+  else if (type === 'DECREMENT') { redState.count--; redState.history.push('-1'); }
+  else if (type === 'ADD10') { redState.count += 10; redState.history.push('+10'); }
+  else if (type === 'RESET') { redState = { count: 0, history: ['RESET'] }; }
+  const c = document.getElementById('red-count');
+  const h = document.getElementById('red-hist');
+  if (c) c.textContent = redState.count;
+  if (h) h.textContent = redState.history.length ? redState.history.join(' → ') : 'No actions dispatched yet';
+}
+
+// Router
+function routeTo(page, el) {
+  document.querySelectorAll('.router-link').forEach(l => l.classList.remove('active-route'));
+  el.classList.add('active-route');
+  const p = pages[page];
+  const rp = document.getElementById('router-page');
+  const ru = document.getElementById('router-url');
+  if (rp) rp.innerHTML = p.content;
+  if (ru) ru.textContent = 'URL: ' + p.url;
+}
+
+// Copy code
+function copyCode(btn) {
+  const code = document.querySelector('pre code');
+  if (!code) return;
+  navigator.clipboard.writeText(code.innerText).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Initial render
+render();
+</script>
+</body>
+</html>
